@@ -170,6 +170,7 @@ def search_handler(*args):
     output = [str(record) for record in matching_contacts]
     return "\n".join(output)
 
+@input_error
 def upcoming_birthdays_handler(*args):
     if len(args) == 0:
         return "/// Invalid command. Please provide the number of days for upcoming birthdays."
@@ -177,26 +178,31 @@ def upcoming_birthdays_handler(*args):
     try:
         days = int(args[0])
         current_date = datetime.now().date()
+
         upcoming_birthdays = []
 
         for contact in address_book.get_all_contacts():
-            birthday = contact.birthday
+            birthday = contact.birthday.value
             if birthday:
-                days_remaining = (birthday.date - current_date).days
+                next_birthday = datetime(current_date.year, birthday.month, birthday.day).date()
+                if next_birthday < current_date:
+                    next_birthday = datetime(current_date.year + 1, birthday.month, birthday.day).date()
+                days_remaining = (next_birthday - current_date).days
                 if 0 <= days_remaining <= days:
-                    upcoming_birthdays.append((contact.name, birthday.date))
+                    upcoming_birthdays.append((contact.name.value, next_birthday))
 
         if not upcoming_birthdays:
             return f"/// No upcoming birthdays in the next {days} days."
-        
+
         upcoming_birthdays.sort(key=lambda x: x[1])
         output = ["/// Upcoming Birthdays:"]
         for name, date in upcoming_birthdays:
             output.append(f"{name}: {date.strftime('%d.%m.%Y')}")
         return "\n".join(output)
-    
+
     except ValueError:
         return "/// Invalid number of days. Please provide a positive integer."
+
     
 def show_contacts_page(page_number):
     contacts = address_book.get_all_contacts()

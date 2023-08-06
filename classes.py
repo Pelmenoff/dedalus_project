@@ -86,11 +86,14 @@ class Birthday:
     @value.setter
     def value(self, value):
         if not isinstance(value, date):
-            raise WrongBirthdate("Invalid birthday format. Please provide a valid date in format dd.mm.yyyy")
+            try:
+                value = datetime.strptime(value, "%d.%m.%Y").date()
+            except ValueError:
+                raise WrongBirthdate("Invalid birthday format. Please provide a valid date in format dd.mm.yyyy")
         self._value = value
 
     def __str__(self):
-        return self.value.strftime("%d.%m.%Y")
+        return self._value.strftime("%d.%m.%Y")
     
 class Email:
     def __init__(self, value=None):
