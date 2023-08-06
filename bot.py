@@ -1,5 +1,6 @@
 import difflib, datetime, requests, subprocess
-from classes import AddressBook, Name, Phone, Birthday, Record
+from classes import AddressBook, Name, Phone, Birthday, Email, Record
+from datetime import datetime
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
@@ -13,7 +14,7 @@ def input_error(func):
         except KeyError:
             return "/// Contact not found."
         except ValueError:
-            return "/// Invalid input. Provide a 10-digit number in the format [1234567890] or Date of birth in the format [XX.XX.XXXX]"
+            return "/// Invalid input. Provide valid information."
         except IndexError:
             return "/// Invalid command. Type \"help\" to show all commands."
     return wrapper
@@ -21,21 +22,39 @@ def input_error(func):
 
 help_info = """/// Commands:
 /// "add [name] [phone] [birthday]" - Add a contact to the address book. Birthday is optional.
-/// "changephone [name] [old_phone] [new_phone]" or "cp [name] [old_phone] [new_phone]" - Change the phone number for a contact.
-/// "changebirthdate [name] [new_date]" or "cb [name] [new_date]" - Change the birthdate for a contact.
-/// "upcomingbirthdays" or "ub" - Show upcoming birthdays.
-/// "delete [name]" or "d [name]" - Delete a contact from the address book.
-/// "search [query]" or "find [query]" or "f [query]" - Search for contacts by name or phone number.
-/// "showcontacts all" or "sc all" - Show all contacts.
-/// "showcontacts [page_number]" or "sc [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once.
-/// "addnote [name] [note]" or "an [name] [note]" - Add a note to a contact.
-/// "shownotes [name]" or "sn [name]" - Show notes for a contact.
-/// "searchnote [query]" or "findnote [query]" or "fn [query]" - Search for notes by content.
-/// "sort" or "s" - Sort contacts and notes alphabetically.
-/// "time" or "t" - Get the current time.
-/// "weather" or "w" - Get the current weather.
-/// "help" or "h" - Show this help message.
-/// "exit", "bye", "good bye", "close", "quit", "q" - Turn off the assistant."""
+/// "changephone [name] [old_phone] [new_phone]" - Change the phone number for a contact.
+/// "changebirthdate [name] [new_date]" - Change the birthdate for a contact.
+/// "upcomingbirthdays [number of days]" - Show upcoming birthdays.
+/// "delete [name]" - Delete a contact from the address book.
+/// "search [query]" or "find [query]" - Search for contacts by name or phone number.
+/// "showcontacts all" - Show all contacts.
+/// "showcontacts [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once.
+/// "addnote [name] [note] [tag]" - Add a note to a contact.
+/// "shownotes [name]" - Show notes for a contact.
+/// "searchnote [query]" or "findnote [query]" - Search for notes by content.
+/// "sort [path]" - Sort contacts and notes alphabetically.
+/// "time" - Get the current time.
+/// "weather [city]" - Get the current weather.
+/// "help" - Show this help message.
+/// "short" - List of short versions of all commands.
+/// "exit", "bye", "good bye", "close", "quit" - Turn off the assistant."""
+
+short_commands = """/// Commands:
+/// "cp [name] [old_phone] [new_phone]" - Change the phone number for a contact.
+/// "cb [name] [new_date]" - Change the birthdate for a contact.
+/// "ub [number of days]" - Show upcoming birthdays.
+/// "d [name]" - Delete a contact from the address book.
+/// "f [query]" - Search for contacts by name or phone number.
+/// "sc all" - Show all contacts.
+/// "sc [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once.
+/// "an [name] [note] [tag]" - Add a note to a contact.
+/// "sn [name]" - Show notes for a contact.
+/// "fn [query]" - Search for notes by content.
+/// "s [path]" - Sort contacts and notes alphabetically.
+/// "t" - Get the current time.
+/// "w  [city]" - Get the current weather.
+/// "h" - Show help message.
+/// "q" - Turn off the assistant."""
 
 
 @input_error
@@ -47,6 +66,10 @@ def hello_handler(*args):
 def help_handler(*args):
     return f"{help_info}"
 
+@input_error
+def short_commands_handler(*args):
+    return f"{short_commands}"
+
 
 @input_error
 def add_handler(*args):
@@ -56,16 +79,31 @@ def add_handler(*args):
     name = str(Name(args[0]))
     phone = str(args[1])
     birthday = None
-    if len(args) > 2:
+    email = None
+
+    if len(args) == 3:
+        try:
+            birthday = Birthday(datetime.strptime(args[2], "%d.%m.%Y").date())
+        except ValueError:
+            email = Email(args[2])
+    elif len(args) == 4:
         birthday = Birthday(datetime.strptime(args[2], "%d.%m.%Y").date())
+        email = Email(args[3])
+    elif len(args) == 5:
+        birthday = Birthday(datetime.strptime(args[3], "%d.%m.%Y").date())
+        email = Email(args[4])
 
     rec: Record = address_book.get(name)
     if rec:
         return rec.add_phone(phone)
 
-    address_book.add_record(name, phone, birthday)
-    return f"/// Contact {name}: {phone} added successfully"
-
+    address_book.add_record(name, phone, birthday, email)
+    message = f"/// Contact {name}: {phone} added successfully."
+    if birthday:
+        message += f" Birthday: {birthday}"
+    if email:
+        message += f" Email: {email}"
+    return message
 
 @input_error
 def cp_handler(*args):
@@ -200,13 +238,16 @@ def show_all_handler(*args):
         except ValueError:
             return "/// Invalid page number. Please provide a positive integer page number or 'all'."
 
-def get_weather(city):
-    # Construct the API URL with the city name and API key
+def get_weather(*args):
+    city = " ".join(args)
+
+    if not city:
+        return "/// Invalid command. Please provide the name of a city for weather information."
+
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     response = requests.get(url)
     data = response.json()
     if data["cod"] == 200:
-        # Extract and return weather information if the API call is successful
         temperature = data["main"]["temp"]
         weather_description = data["weather"][0]["description"]
         return f"The current weather in {city} is {weather_description}. Temperature: {temperature}°C"
@@ -214,8 +255,8 @@ def get_weather(city):
         return "Failed to retrieve weather information"
     
 def get_current_time():
-    now = datetime.datetime.now()
-    current_time = now.strftime("%H:%M")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
     return f"The current time is {current_time}"
 
 def sort_files(path):
@@ -331,6 +372,7 @@ COMMANDS = {
     sort_files: ("sort", "s"),
     get_current_time: ("time", "t"),
     get_weather: ("weather", "w"),
+    short_commands_handler: ("shortcommands", "short"),
     help_handler: ("help", "h"),
 }
 
