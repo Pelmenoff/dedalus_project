@@ -1,0 +1,103 @@
+# ... попередні функції і код ...
+
+@input_error
+def add_note_handler(*args):
+    if len(args) < 2:
+        return "/// Invalid command. Please provide a title and text for the note."
+
+    title = args[0]
+    text = args[1]
+
+    tags = []
+    if len(args) > 2:
+        tags = args[2].split(',')
+
+    note = {"title": title, "text": text, "tags": tags}
+    notes.append(note)
+    return "/// Note added successfully."
+
+@input_error
+def show_notes_handler(*args):
+    if len(args) == 0:
+        if not notes:
+            return "/// No notes found."
+        output = ["/// All Notes:"]
+        for note in notes:
+            output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
+        return "\n".join(output)
+
+    if args[0] == "all":
+        return show_notes_handler([])
+    else:
+        try:
+            page_number = int(args[0])
+            notes_per_page = 5
+            start_index = (page_number - 1) * notes_per_page
+            end_index = start_index + notes_per_page
+            notes_page = notes[start_index:end_index]
+            if not notes_page:
+                return f"/// Page {page_number} is empty. Available pages: 1 to {len(notes)//notes_per_page+1}"
+            output = [f"/// Notes (Page {page_number}):"]
+            for note in notes_page:
+                output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
+            return "\n".join(output)
+        except ValueError:
+            return "/// Invalid page number. Please provide a positive integer page number or 'all'."
+
+
+@input_error
+def search_notes_handler(*args):
+    if len(args) == 0:
+        return "/// Invalid command. Please provide a search term."
+
+    search_term = args[0].lower()
+    matching_notes = []
+
+    for note in notes:
+        if (search_term in note["title"].lower()) or (search_term in note["text"].lower()) or any(search_term in tag.lower() for tag in note["tags"]):
+            matching_notes.append(note)
+
+    if not matching_notes:
+        return f"/// No notes found matching the search term: \"{search_term}\""
+
+    output = ["/// Matching Notes:"]
+    for note in matching_notes:
+        output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
+
+    return "\n".join(output)
+
+
+COMMANDS = {
+    # ... попередні команди ...
+    add_note_handler: ("addnote", "an"),
+    show_notes_handler: ("shownotes", "sn"),
+    search_notes_handler: ("searchnotes", "findnote", "fn"),
+}
+
+# ... решта коду ...
+
+#Приклад використання
+/// How can I help you?
+/// ---> add John +1234567890 01.01.1990
+/// Contact John: +1234567890 added successfully
+/// ---> add Mary +9876543210
+/// Contact Mary: +9876543210 added successfully
+/// ---> addnote Birthday Party Come to my birthday party at 7 PM on Saturday! Tags: party, celebration
+/// Note added successfully.
+/// ---> shownotes all
+/// All Notes:
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> shownotes 1
+/// Notes (Page 1):
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> searchnotes party
+/// Matching Notes:
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> changephone John +1234567890 +1111111111
+/// Phone number changed from +1234567890 to +1111111111 for contact John
+/// ---> search John
+/// John: +1111111111
+/// ---> delete Mary
+/// Contact "Mary" deleted successfully.
+/// ---> bye
+/// Good bye!

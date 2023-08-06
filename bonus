@@ -1,0 +1,88 @@
+from classes import AddressBook, Name, Phone, Birthday, Record
+from datetime import datetime
+import difflib
+
+address_book = AddressBook()
+
+# ... попередні функції і код ...
+
+COMMANDS = {
+    # ... попередні команди ...
+    add_note_handler: ("addnote", "an"),
+    show_notes_handler: ("shownotes", "sn"),
+    search_notes_handler: ("searchnotes", "findnote", "fn"),
+}
+
+def find_closest_command(input_text):
+    closest_command = ""
+    max_similarity = 0
+
+    for handler, keywords in COMMANDS.items():
+        for keyword in keywords:
+            similarity = difflib.SequenceMatcher(None, input_text, keyword).ratio()
+            if similarity > max_similarity:
+                max_similarity = similarity
+                closest_command = keyword
+
+    return closest_command
+
+
+def main():
+    while True:
+        user_input = input("/// ---> ")
+
+        cmd, data = parser(user_input)
+
+        if cmd == unknown_handler:
+            closest_command = find_closest_command(user_input)
+            print(f"/// Invalid command. Did you mean '{closest_command}'?")
+
+        result = cmd(*data)
+        try:
+            print(result)
+        except IndexError:
+            print(unknown_handler())
+
+        if cmd == exit_handler:
+            address_book.save_data()
+            break
+
+if __name__ == "__main__":
+    main()
+
+
+
+/// How can I help you?
+/// ---> ad John +1234567890 01.01.1990
+/// /// Invalid command. Did you mean 'add'?
+/// ---> add John +1234567890 01.01.1990
+/// Contact John: +1234567890 added successfully
+/// ---> addnote Birthday Party Come to my birthday party at 7 PM on Saturday! Tags: party, celebration
+/// Note added successfully.
+/// ---> shownotes all
+/// All Notes:
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> shownote
+/// /// Invalid command. Did you mean 'shownotes'?
+/// ---> shownotes
+/// All Notes:
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> search notes
+/// /// Invalid command. Did you mean 'searchnotes'?
+/// ---> searchnotes
+/// /// Invalid command. Did you mean 'searchnotes'?
+/// ---> search note
+/// /// Invalid command. Did you mean 'searchnotes'?
+/// ---> search party
+/// Matching Notes:
+/// Title: Birthday Party, Text: Come to my birthday party at 7 PM on Saturday!, Tags: party, celebration
+/// ---> changephone John +1234567890 +1111111111
+/// Phone number changed from +1234567890 to +1111111111 for contact John
+/// ---> search John
+/// John: +1111111111
+/// ---> delete Mary
+/// /// Invalid command. Did you mean 'delete'?
+/// ---> delete Mary
+/// Contact "Mary" not found.
+/// ---> bye
+/// Good bye!
