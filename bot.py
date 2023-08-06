@@ -278,14 +278,14 @@ def get_weather(*args):
     if data["cod"] == 200:
         temperature = data["main"]["temp"]
         weather_description = data["weather"][0]["description"]
-        return f"The current weather in {city} is {weather_description}. Temperature: {temperature}°C"
+        return f"/// The current weather in {city} is {weather_description}. Temperature: {temperature}°C"
     else:
-        return "Failed to retrieve weather information"
+        return "/// Failed to retrieve weather information"
     
 def get_current_time():
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    return f"The current time is {current_time}"
+    return f"/// The current time is {current_time}"
 
 def sort_files(path):
     try:
