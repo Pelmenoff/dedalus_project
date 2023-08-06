@@ -74,7 +74,7 @@ class Birthday:
         self._value = value
 
     def __str__(self):
-        return self.value.strftime("%d-%m-%Y")
+        return self.value.strftime("%d.%m.%Y")
 
 
 class Record:
@@ -123,7 +123,7 @@ class Record:
 class AddressBook(UserDict):
     def __init__(self):
         super().__init__()
-        self.file_path = "address_book.json"  # File to store the data
+        self.file_path = "address_book.json"
 
         self.load_data()
 
@@ -147,7 +147,7 @@ class AddressBook(UserDict):
                     {
                         "name": contact.name.value,
                         "phones": [phone.value for phone in contact.phones],
-                        "birthday": contact.birthday.value.strftime("%d-%m-%Y") if contact.birthday else None,
+                        "birthday": contact.birthday.value.strftime("%d.%m.%Y") if contact.birthday else None,
                     }
                     for contact in self.get_all_contacts()
                 ]
@@ -162,7 +162,7 @@ class AddressBook(UserDict):
                     name = contact_data.get("name")
                     phones = contact_data.get("phones", [])
                     birthday_str = contact_data.get("birthday")
-                    birthday = Birthday(datetime.strptime(birthday_str, "%d-%m-%Y").date()) if birthday_str else None
+                    birthday = Birthday(datetime.strptime(birthday_str, "%d.%m.%Y").date()) if birthday_str else None
                     self.add_record(name, phones[0], birthday)
                     for phone in phones[1:]:
                         self.get(name).add_phone(phone)
