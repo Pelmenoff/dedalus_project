@@ -1,7 +1,13 @@
-import json
+import json, phonenumbers, re
 from typing import Optional
 from collections import UserDict
 from datetime import date, datetime
+
+class WrongPhoneNumber(Exception):
+    pass
+
+class WrongEmail(Exception):
+    pass
 
 class Field:
     def __init__(self, value) -> None:
@@ -49,12 +55,19 @@ class Phone:
 
     @value.setter
     def value(self, value):
-        if not value.isdigit() or len(value) != 10:
-            raise ValueError("Invalid phone number format. Please provide a 10-digit number.")
-        self._value = value
+        try:
+            parsed_number = phonenumbers.parse(value, None)
+            if not phonenumbers.is_valid_number(parsed_number):
+                raise WrongPhoneNumber("Invalid phone number. Please provide a valid phone number.")
+            self._value = value
+        except phonenumbers.NumberParseException as e:
+            raise WrongPhoneNumber("Invalid phone number format. Please provide a valid phone number.") from e
 
     def __str__(self):
-        return self.value
+        return str(self._value)
+    
+    def __eq__(self, __value: object) -> bool:
+        return self._value == __value._value
 
 
 class Birthday:
@@ -75,6 +88,26 @@ class Birthday:
 
     def __str__(self):
         return self.value.strftime("%d.%m.%Y")
+    
+class Email:
+    def __init__(self, value=None):
+        self._value = None
+        if value:
+            self.value = value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        email_pattern = '[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]'
+        if not re.match(email_pattern, value):
+            raise ValueError("Invalid email format. Try again.")
+        self._value = value
+
+    def __str__(self):
+        return str(self._value)   
 
 
 class Record:
