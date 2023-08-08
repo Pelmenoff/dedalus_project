@@ -1,12 +1,15 @@
 import difflib, datetime, requests, subprocess
 from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
+from notebook import Notebook
 
 bot_ver = 'Dedalus v1.1.1'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
 address_book = AddressBook()
+notebook = Notebook()
+save_path = "notebook_data.pickle"
 
 
 def input_error(func):
@@ -32,9 +35,11 @@ help_info = """/// Commands:
 /// "search [query]" or "find [query]" - Search for contacts by name or phone number. Example: search John
 /// "showcontacts all" - Show all contacts. Example: showcontacts all
 /// "showcontacts [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: showcontacts 2
-/// "addnote [name] [note] [tag]" - Add a note to a contact. Example: addnote John Doe Meeting with John at 2 PM, Important
-/// "shownotes [name]" - Show notes for a contact. Example: shownotes John Doe
-/// "searchnote [query]" or "findnote [query]" - Search for notes by content. Example: searchnote Meeting
+/// "addnote [title] [content]" - Add a note.
+/// "shownotes" - Show all notes.
+/// "searchnote [title]" or "findnote [query]" - Search for notes with title. Example: searchnote Meeting
+/// "editnote [title] [new_content]" - Editting note with given title.
+/// "deletenote [title]" - Delliting note with given title.
 /// "sort [path]" - Sort contacts and notes alphabetically. Example: sort D:\Folder
 /// "weather [city]" - Get the current weather. Example: weather New York
 /// "time" - Get the current time.
@@ -52,9 +57,11 @@ short_commands = """/// Commands:
 /// "f [query]" - Search for contacts. Example: f John
 /// "sc all" - Show all contacts. Example: sc all
 /// "sc [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: sc 2
-/// "an [name] [note] [tag]" - Add a note to a contact. Example: an John Doe Meeting with John at 2 PM, Important
-/// "sn [name]" - Show notes for a contact. Example: sn John Doe
-/// "fn [query]" - Search for notes. Example: fn Meeting
+/// "an [title] [content] [tag]" - Add a note.
+/// "sn" - Show all notes.
+/// "fn [title]" - Search for note with given title.
+/// "en [title] [new_content]" - Editting note with given title.
+/// "dn [title]" - Delliting note with given title.
 /// "s [path]" - Sort contacts and notes alphabetically. Example: s D:\Folder
 /// "w [city]" - Get the current weather. Example: w New York
 /// "t" - Get the current time.
@@ -296,6 +303,7 @@ def sort_files(path):
 
 
 def exit_handler(*args):
+    notebook.save_to_file(save_path)
     return "/// Good bye!"
 
 
@@ -303,73 +311,22 @@ def exit_handler(*args):
 def unknown_handler(*args):
     return "/// Invalid command. Type \"help\" to show all commands."
 
+def add_note_handler(*data):
+     return notebook.add_note(*data)
 
-notes = []
+def show_all_notes_handler(*data):
+    return notebook.show_all_notes(*data)
 
-@input_error
-def add_note_handler(*args):
-    if len(args) < 2:
-        return "/// Invalid command. Please provide a title and text for the note."
 
-    title = args[0]
-    text = args[1]
+def view_note_handler(*data):
+    return notebook.view_note(*data)
 
-    tags = []
-    if len(args) > 2:
-        tags = args[2].split(',')
 
-    note = {"title": title, "text": text, "tags": tags}
-    notes.append(note)
-    return "/// Note added successfully."
+def edit_note_handler(*data):
+    return notebook.edit_note(*data)
 
-@input_error
-def show_notes_handler(*args):
-    if len(args) == 0:
-        if not notes:
-            return "/// No notes found."
-        output = ["/// All Notes:"]
-        for note in notes:
-            output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-        return "\n".join(output)
-
-    if args[0] == "all":
-        return show_notes_handler([])
-    else:
-        try:
-            page_number = int(args[0])
-            notes_per_page = 5
-            start_index = (page_number - 1) * notes_per_page
-            end_index = start_index + notes_per_page
-            notes_page = notes[start_index:end_index]
-            if not notes_page:
-                return f"/// Page {page_number} is empty. Available pages: 1 to {len(notes)//notes_per_page+1}"
-            output = [f"/// Notes (Page {page_number}):"]
-            for note in notes_page:
-                output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-            return "\n".join(output)
-        except ValueError:
-            return "/// Invalid page number. Please provide a positive integer page number or 'all'."
-
-@input_error
-def search_notes_handler(*args):
-    if len(args) == 0:
-        return "/// Invalid command. Please provide a search term."
-
-    search_term = args[0].lower()
-    matching_notes = []
-
-    for note in notes:
-        if (search_term in note["title"].lower()) or (search_term in note["text"].lower()) or any(search_term in tag.lower() for tag in note["tags"]):
-            matching_notes.append(note)
-
-    if not matching_notes:
-        return f"/// No notes found matching the search term: \"{search_term}\""
-
-    output = ["/// Matching Notes:"]
-    for note in matching_notes:
-        output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-
-    return "\n".join(output)
+def delete_note_handler(*data):
+    return notebook.delete_note(*data)
 
 def find_closest_command(input_text):
     closest_command = ""
@@ -396,8 +353,10 @@ COMMANDS = {
     exit_handler: ("bye", "exit", "break", "good bye", "close", "quit", "q"),
     show_all_handler: ("sc all", "showcontacts all", "sc", "showcontacts"),
     add_note_handler: ("addnote", "an"),
-    show_notes_handler: ("shownotes", "sn"),
-    search_notes_handler: ("searchnote", "findnote", "fn"),
+    show_all_notes_handler: ("shownotes", "sn"),
+    view_note_handler: ("searchnote", "findnote", "fn"),
+    edit_note_handler: ("editnote", "en"),
+    delete_note_handler: ("deletenote", "dn"),
     sort_files: ("sort", "s"),
     get_current_time: ("time", "t"),
     get_weather: ("weather", "w"),
@@ -421,6 +380,7 @@ def parser(text: str):
 
 
 def main():
+    notebook.load_from_file(save_path)
 
     print(f"/// \U0001F916 {bot_ver} loaded. Waiting for command.")
 
