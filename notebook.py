@@ -60,17 +60,15 @@ class Notebook:
 
     def save_to_file(self, filename):
         with open(filename, mode="wb") as file:
-            pickle.dump(self.data, file)
+            pickle.dump(self.notes, file)
 
     def load_from_file(self, filename):
         try:
             with open(filename, 'rb') as f:
                 if os.stat(filename).st_size == 0:
-                    self.data = {}
+                    self.notes = {}
                 else:
-                    self.data = pickle.load(f)
+                    self.notes = pickle.load(f)
         except (FileNotFoundError, pickle.UnpicklingError):
-            with open(filename, 'wb') as f:
-                self.data = {}
-                pickle.dump(self.data, f)
-
+            self.notes = {}
+            self.save_to_file(filename)
