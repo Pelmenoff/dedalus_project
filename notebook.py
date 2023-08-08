@@ -1,3 +1,7 @@
+import os
+import pickle
+
+
 class Notebook:
     def __init__(self):
         self.notes = {}
@@ -53,4 +57,22 @@ class Notebook:
             return f'Note with title: "{title}" deleted.'
         else:
             return f'Note with title: "{title}" was not found.'
+
+    def save_to_file(self, filename):
+        filename = "Notebook.pickle"
+        with open(filename, mode="wb") as file:
+            pickle.dump(self.data, file)
+
+    def load_from_file(self, filename):
+        filename = "Notebook.pickle"
+        try:
+            with open(filename, 'rb') as f:
+                if os.stat(filename).st_size == 0:
+                    self.data = {}
+                else:
+                    self.data = pickle.load(f)
+        except (FileNotFoundError, pickle.UnpicklingError):
+            with open(filename, 'wb') as f:
+                self.data = {}
+                pickle.dump(self.data, f)
 

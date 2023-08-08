@@ -34,10 +34,10 @@ help_info = """/// Commands:
 /// "search [query]" or "find [query]" - Search for contacts by name or phone number. Example: search John
 /// "showcontacts all" - Show all contacts. Example: showcontacts all
 /// "showcontacts [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: showcontacts 2
-/// "addnote [title] [content] [tag]" - Add a note.
+/// "addnote [title] [content]" - Add a note.
 /// "shownotes" - Show all notes.
 /// "searchnote [title]" or "findnote [query]" - Search for notes with title. Example: searchnote Meeting
-/// "editnote [title]" - Editting note with given title.
+/// "editnote [title] [new_content]" - Editting note with given title.
 /// "deletenote [title]" - Delliting note with given title.
 /// "sort [path]" - Sort contacts and notes alphabetically. Example: sort D:\Folder
 /// "weather [city]" - Get the current weather. Example: weather New York
@@ -59,7 +59,7 @@ short_commands = """/// Commands:
 /// "an [title] [content] [tag]" - Add a note.
 /// "sn" - Show all notes.
 /// "fn [title]" - Search for note with given title.
-/// "en [title]" - Editting note with given title.
+/// "en [title] [new_content]" - Editting note with given title.
 /// "dn [title]" - Delliting note with given title.
 /// "s [path]" - Sort contacts and notes alphabetically. Example: s D:\Folder
 /// "w [city]" - Get the current weather. Example: w New York
@@ -302,6 +302,7 @@ def sort_files(path):
 
 
 def exit_handler(*args):
+    notebook.save_to_file("Notebook.pickle")
     return "/// Good bye!"
 
 
@@ -309,22 +310,22 @@ def exit_handler(*args):
 def unknown_handler(*args):
     return "/// Invalid command. Type \"help\" to show all commands."
 
-def add_note_handler(data):
-     return notebook.add_note(data)
+def add_note_handler(*data):
+     return notebook.add_note(*data)
 
-def show_all_notes_handler(data):
-    return notebook.show_all_notes(data)
-
-
-def view_note_handler(data):
-    return notebook.view_note(data)
+def show_all_notes_handler(*data):
+    return notebook.show_all_notes(*data)
 
 
-def edit_note_handler(data):
-    return notebook.edit_note(data)
+def view_note_handler(*data):
+    return notebook.view_note(*data)
 
-def delete_note_handler(data):
-    return notebook.delete_note(data)
+
+def edit_note_handler(*data):
+    return notebook.edit_note(*data)
+
+def delete_note_handler(*data):
+    return notebook.delete_note(*data)
 
 def find_closest_command(input_text):
     closest_command = ""
@@ -378,6 +379,7 @@ def parser(text: str):
 
 
 def main():
+    notebook.load_from_file("Notebook.pickle")
 
     print(f"/// {bot_ver} loaded. Waiting for command.")
 
