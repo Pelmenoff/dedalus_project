@@ -2,7 +2,7 @@ import difflib, datetime, requests, subprocess
 from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
 
-bot_ver = 'Dedalus v1.1'
+bot_ver = 'Dedalus v1.1.1'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
@@ -422,7 +422,7 @@ def parser(text: str):
 
 def main():
 
-    print(f"/// {bot_ver} loaded. Waiting for command.")
+    print(f"/// \U0001F916 {bot_ver} loaded. Waiting for command.")
 
     while True:
         user_input = input("/// ---> ")
