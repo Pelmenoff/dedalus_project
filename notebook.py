@@ -1,10 +1,6 @@
-from prompt_toolkit import PromptSession
-
-
 class Notebook:
     def __init__(self):
         self.notes = {}
-        self.session = PromptSession()
 
     def add_note(self, parameters):
         if len(parameters) < 2:
@@ -35,21 +31,17 @@ class Notebook:
         return output.strip()
 
     def edit_note(self, parameters):
-        if len(parameters) != 1:
-            return 'Please enter the title, to edit.'
-
+        if len(parameters) < 2:
+            return 'Please enter title and new content.'
         title = parameters[0]
         if title in self.notes:
-            current_content = self.notes[title]
-            new_content = self.session.prompt(f'You can now edit content of the note with title: "{title}": ',
-                                              default=current_content)
-            if new_content:
-                self.notes[title] = new_content
-                return f'NOte with title: "{title}" edited.'
-            else:
-                return f'Note with title: "{title}" was not edited.'
+            del self.notes[title]
         else:
             return f'Note with title: "{title}" was not found.'
+        title = parameters[0]
+        content = parameters[1:]
+        self.notes[title] = ' '.join(content)
+        return f'Note with title: "{title}" added.'
 
     def delete_note(self, parameters):
         if len(parameters) != 1:

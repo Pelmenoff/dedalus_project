@@ -1,7 +1,6 @@
 import difflib, datetime, requests, subprocess
 from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
-from prompt_toolkit import PromptSession
 from notebook import Notebook
 
 bot_ver = 'Dedalus v1.1'
