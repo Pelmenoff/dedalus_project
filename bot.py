@@ -355,7 +355,7 @@ COMMANDS = {
     add_note_handler: ("addnote", "an"),
     show_all_notes_handler: ("shownotes", "sn"),
     view_note_handler: ("searchnote", "findnote", "fn"),
-    edit_note_handler: ("editnote", "ed"),
+    edit_note_handler: ("editnote", "en"),
     delete_note_handler: ("deletenote", "dn"),
     sort_files: ("sort", "s"),
     get_current_time: ("time", "t"),
