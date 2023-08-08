@@ -6,7 +6,7 @@ class Notebook:
     def __init__(self):
         self.notes = {}
 
-    def add_note(self, parameters):
+    def add_note(self, *parameters):
         if len(parameters) < 2:
             return 'Please enter title and content.'
 
@@ -15,7 +15,7 @@ class Notebook:
         self.notes[title] = ' '.join(content)
         return f'Note with title: "{title}" added.'
 
-    def view_note(self, parameters):
+    def view_note(self, *parameters):
         if len(parameters) != 1:
             return 'Please enter the title, to view.'
 
@@ -34,7 +34,7 @@ class Notebook:
             output += f'Title: {title}\nContent: {content}\n\n'
         return output.strip()
 
-    def edit_note(self, parameters):
+    def edit_note(self, *parameters):
         if len(parameters) < 2:
             return 'Please enter title and new content.'
         title = parameters[0]
@@ -47,7 +47,7 @@ class Notebook:
         self.notes[title] = ' '.join(content)
         return f'Note with title: "{title}" added.'
 
-    def delete_note(self, parameters):
+    def delete_note(self, *parameters):
         if len(parameters) != 1:
             return 'Please enter the title, for deletion.'
 
@@ -59,12 +59,10 @@ class Notebook:
             return f'Note with title: "{title}" was not found.'
 
     def save_to_file(self, filename):
-        filename = "Notebook.pickle"
         with open(filename, mode="wb") as file:
             pickle.dump(self.data, file)
 
     def load_from_file(self, filename):
-        filename = "Notebook.pickle"
         try:
             with open(filename, 'rb') as f:
                 if os.stat(filename).st_size == 0:
