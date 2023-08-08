@@ -9,6 +9,7 @@ API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
 address_book = AddressBook()
 notebook = Notebook()
+save_path = "notebook_data.pickle"
 
 
 def input_error(func):
@@ -302,7 +303,7 @@ def sort_files(path):
 
 
 def exit_handler(*args):
-    notebook.save_to_file("Notebook.pickle")
+    notebook.save_to_file(save_path)
     return "/// Good bye!"
 
 
@@ -379,7 +380,7 @@ def parser(text: str):
 
 
 def main():
-    notebook.load_from_file("Notebook.pickle")
+    notebook.load_from_file(save_path)
 
     print(f"/// {bot_ver} loaded. Waiting for command.")
 
