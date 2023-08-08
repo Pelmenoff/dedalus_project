@@ -30,6 +30,7 @@ help_info = """/// Commands:
 /// "changephone [name] [old_phone] [new_phone]" - Change the phone number for a contact. Example: changephone John Doe +1234567890 +9876543210
 /// "changebirthdate [name] [new_date]" - Change the birthdate for a contact. Example: changebirthdate John Doe 10.08.1990
 /// "changeemail [name] [new_email]" - Change the email for a contact. Example: changeemail John Doe john@example.com
+/// "changename [name] [new_name]" or "rename [name] [new_name]" - Change the name of a contact. Example: changename John Bill
 /// "upcomingbirthdays [number of days]" - Show upcoming birthdays. Example: upcomingbirthdays 7
 /// "delete [name]" - Delete a contact from the address book. Example: delete John Doe
 /// "search [query]" or "find [query]" - Search for contacts by name or phone number. Example: search John
@@ -52,6 +53,7 @@ short_commands = """/// Commands:
 /// "cp [name] [old_phone] [new_phone]" - Change phone number. Example: cp John Doe +1234567890 +9876543210
 /// "cb [name] [new_date]" - Change birthdate. Example: cb John Doe 10.08.1990
 /// "ce [name] [new_email]" - Change email. Example: ce John Doe john@example.com
+/// "cn [name] [new_name]" - Change name. Example: cn John Doe John Smith
 /// "ub [number of days]" - Show upcoming birthdays. Example: ub 7
 /// "d [name]" - Delete a contact. Example: d John Doe
 /// "f [query]" - Search for contacts. Example: f John
@@ -108,7 +110,7 @@ def add_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         if any(str(phone) == existing_phone.value for existing_phone in rec.phones):
-            return f"/// Phone number {phone} already exists for contact {name}."
+            return f"/// Phone number {phone} already exists for contact: {name}."
         return rec.add_phone(phone)
 
     address_book.add_record(name, phone, birthday, email)
@@ -132,9 +134,9 @@ def change_phone_handler(*args):
     if rec:
         if any(str(phone) == old_phone for phone in rec.phones):
             rec.change_phone(old_phone, new_phone)
-            return f"/// Phone number changed from {old_phone} to {new_phone} for contact {name}"
+            return f"/// Phone number changed from {old_phone} to {new_phone} for contact: {name}"
         else:
-            return f"/// Phone number {old_phone} not found for contact {name}"
+            return f"/// Phone number {old_phone} not found for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
 
@@ -150,7 +152,7 @@ def change_birthdate_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         rec.birthday = new_birthday
-        return f"/// Birthdate changed to {new_birthday} for contact {name}"
+        return f"/// Birthdate changed to {new_birthday} for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
     
@@ -165,9 +167,24 @@ def change_email_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         rec.email = new_email
-        return f"/// Email changed to {new_email} for contact {name}"
+        return f"/// Email changed to {new_email} for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
+    
+@input_error
+def change_name_handler(*args):
+    if len(args) < 2:
+        return "/// Invalid command. Please provide name and new name."
+
+    old_name = args[0]
+    new_name = args[1]
+
+    rec: Record = address_book.get(old_name)
+    if rec:
+        rec.name.value = new_name
+        return f"/// Name changed \"{old_name}\" ---> \"{new_name}\"."
+    else:
+        return f"/// No contacts with name: \"{old_name}\" in the address book"
 
 @input_error
 def delete_handler(*args):
@@ -347,6 +364,7 @@ COMMANDS = {
     change_phone_handler: ("changephone", "cp"),
     change_birthdate_handler: ("changebirthdate", "cb"),
     change_email_handler: ("changeemail", "ce"),
+    change_name_handler: ("changename", "rename", "cn"),
     upcoming_birthdays_handler: ("upcomingbirthdays", "ub"),
     delete_handler: ("delete", "d"),
     search_handler: ("search", "find", "f"),
