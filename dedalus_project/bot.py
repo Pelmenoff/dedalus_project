@@ -1,9 +1,9 @@
-import difflib, datetime, requests, subprocess
+import difflib, datetime, requests, subprocess, os, sys
 from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
 from notebook import Notebook
 
-bot_ver = 'Dedalus v1.2.1'
+bot_ver = 'Dedalus v1.2.3'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
@@ -312,8 +312,9 @@ def get_current_time():
     return f"/// The current time is {current_time}"
 
 def sort_files(path):
+    sort_script_path = os.path.join(os.path.dirname(__file__), "sort.py")
     try:
-        subprocess.run(["python", "sort.py", path], check=True)
+        subprocess.run([sys.executable, sort_script_path, path], check=True)
         return True
     except subprocess.CalledProcessError as e:
         return False
@@ -400,7 +401,7 @@ def parser(text: str):
 def main():
     notebook.load_from_file(save_path)
 
-    print(f"/// \U0001F916 {bot_ver} loaded. Waiting for command.")
+    print(f"/// \U0001F916 {bot_ver} loaded. Waiting for command. \"help\" to show list of all commands.")
 
     while True:
         user_input = input("/// ---> ")

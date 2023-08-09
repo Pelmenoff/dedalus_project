@@ -36,6 +36,15 @@ def get_known_extensions() -> set:
         known_extensions.update(exts)
     return known_extensions
 
+def get_known_extensions_in_folder(path: Path) -> set:
+    known_extensions = get_known_extensions()
+    extensions_in_folder = set()
+    for item in path.glob("**/*"):
+        if item.is_file():
+            ext = item.suffix.lower()
+            if ext in known_extensions:
+                extensions_in_folder.add(ext)
+    return extensions_in_folder
 
 def get_unknown_extensions(path: Path) -> set:
     known_extensions = get_known_extensions()
@@ -59,9 +68,9 @@ def unpack_archive(path: Path, sort: bool) -> None:
                     if sort:
                         sort_folder(unpack_path)
                         delete_empty_folders(unpack_path)
-                        print(f"{item} - unpacked and sorted")
+                        print(f"/// {item} - unpacked and sorted")
                     if sort is False:
-                        print(f"{item} - unpacked")
+                        print(f"/// {item} - unpacked")
 
 
 def sort_folder(path: Path) -> None:
@@ -75,23 +84,23 @@ def main():
     try:
         path = Path(sys.argv[1])
     except IndexError:
-        return "No path to folder"
+        return "/// No path to folder"
     
     if not path.exists():
-        return f"Folder {path} not found."
+        return f"/// Folder {path} not found."
 
-    confirmation = input(f"Are you sure you want to sort the files in folder {path}? (Y - Yes, N - No) >>> ")
+    confirmation = input(f"/// Are you sure you want to sort the files in folder {path}? (Y - Yes, N - No) >>> ")
     if confirmation.lower() != "y":
-        return "Sorting aborted."
+        return "/// Sorting aborted."
 
     sort_folder(path)
-    print(f"[{path}] \n/// Sorted")
+    print(f"/// [{path}] \n/// Sorted")
     delete_empty_folders(path)
-    print("Empty folders deleted")
+    print("/// Empty folders deleted")
     wait_sort = True
 
     while wait_sort:
-        sort = input("Sort unpacked archives? (Y - Yes, N - No) >>> ")
+        sort = input("/// Sort unpacked archives? (Y - Yes, N - No) >>> ")
         if sort == "Y" or sort == "y":
             sort = True
             unpack_archive(path, True)
@@ -108,17 +117,17 @@ def main():
             f = [file.name for file in cat_dir.glob("*")]
             files[cat] = f
 
-    print("Files in each category:")
+    print("/// Files in each category:")
     for cat, files in files.items():
-        print(f"{cat}: {files}")
+        print(f"/// {cat}: {files}")
 
-    known_extensions = get_known_extensions()
-    print("\nKnown Extensions:")
-    print(known_extensions)
+    known_extensions = get_known_extensions_in_folder(path)
+    print("/// \n/// Known Extensions:")
+    print(f"/// {known_extensions}")
 
     unknown_extensions = get_unknown_extensions(path)
-    print("\nUnknown Extensions:")
-    print(unknown_extensions)
+    print("/// \n/// Unknown Extensions:")
+    print(f"/// {unknown_extensions}")
 
 
 if __name__ == "__main__":
