@@ -14,7 +14,7 @@ Dedalus is a personal assistant and organizer built using Python. It allows you 
 ##### If you want to use Dedalus without installing, follow these steps:
 1. Clone or download the repository to your local machine.
 2. Install the required dependencies using `pip install -r requirements.txt`.
-3. Run `bot.py` in your preferred Python environment.
+3. Run `py -m dedalus_project.bot` in your preferred Python environment.
 
 ## Features
 -Add, manage, and search for contacts with names, phone numbers, birthdays, and emails.
