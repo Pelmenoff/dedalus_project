@@ -1,12 +1,15 @@
-import difflib, datetime, requests, subprocess
+import difflib, datetime, requests, subprocess, os, sys
 from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
+from notebook import Notebook
 
-bot_ver = 'Dedalus v1.1'
+bot_ver = 'Dedalus v1.2.3'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
 address_book = AddressBook()
+notebook = Notebook()
+save_path = "notebook_data.pickle"
 
 
 def input_error(func):
@@ -27,14 +30,17 @@ help_info = """/// Commands:
 /// "changephone [name] [old_phone] [new_phone]" - Change the phone number for a contact. Example: changephone John Doe +1234567890 +9876543210
 /// "changebirthdate [name] [new_date]" - Change the birthdate for a contact. Example: changebirthdate John Doe 10.08.1990
 /// "changeemail [name] [new_email]" - Change the email for a contact. Example: changeemail John Doe john@example.com
+/// "changename [name] [new_name]" or "rename [name] [new_name]" - Change the name of a contact. Example: changename John Bill
 /// "upcomingbirthdays [number of days]" - Show upcoming birthdays. Example: upcomingbirthdays 7
 /// "delete [name]" - Delete a contact from the address book. Example: delete John Doe
 /// "search [query]" or "find [query]" - Search for contacts by name or phone number. Example: search John
 /// "showcontacts all" - Show all contacts. Example: showcontacts all
 /// "showcontacts [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: showcontacts 2
-/// "addnote [name] [note] [tag]" - Add a note to a contact. Example: addnote John Doe Meeting with John at 2 PM, Important
-/// "shownotes [name]" - Show notes for a contact. Example: shownotes John Doe
-/// "searchnote [query]" or "findnote [query]" - Search for notes by content. Example: searchnote Meeting
+/// "addnote [title] [content]" - Add a note.
+/// "shownotes" - Show all notes.
+/// "searchnote [title]" or "findnote [query]" - Search for notes with title. Example: searchnote Meeting
+/// "editnote [title] [new_content]" - Editting note with given title.
+/// "deletenote [title]" - Delliting note with given title.
 /// "sort [path]" - Sort contacts and notes alphabetically. Example: sort D:\Folder
 /// "weather [city]" - Get the current weather. Example: weather New York
 /// "time" - Get the current time.
@@ -47,14 +53,17 @@ short_commands = """/// Commands:
 /// "cp [name] [old_phone] [new_phone]" - Change phone number. Example: cp John Doe +1234567890 +9876543210
 /// "cb [name] [new_date]" - Change birthdate. Example: cb John Doe 10.08.1990
 /// "ce [name] [new_email]" - Change email. Example: ce John Doe john@example.com
+/// "cn [name] [new_name]" - Change name. Example: cn John Doe John Smith
 /// "ub [number of days]" - Show upcoming birthdays. Example: ub 7
 /// "d [name]" - Delete a contact. Example: d John Doe
 /// "f [query]" - Search for contacts. Example: f John
 /// "sc all" - Show all contacts. Example: sc all
 /// "sc [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: sc 2
-/// "an [name] [note] [tag]" - Add a note to a contact. Example: an John Doe Meeting with John at 2 PM, Important
-/// "sn [name]" - Show notes for a contact. Example: sn John Doe
-/// "fn [query]" - Search for notes. Example: fn Meeting
+/// "an [title] [content] [tag]" - Add a note.
+/// "sn" - Show all notes.
+/// "fn [title]" - Search for note with given title.
+/// "en [title] [new_content]" - Editting note with given title.
+/// "dn [title]" - Delliting note with given title.
 /// "s [path]" - Sort contacts and notes alphabetically. Example: s D:\Folder
 /// "w [city]" - Get the current weather. Example: w New York
 /// "t" - Get the current time.
@@ -101,7 +110,7 @@ def add_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         if any(str(phone) == existing_phone.value for existing_phone in rec.phones):
-            return f"/// Phone number {phone} already exists for contact {name}."
+            return f"/// Phone number {phone} already exists for contact: {name}."
         return rec.add_phone(phone)
 
     address_book.add_record(name, phone, birthday, email)
@@ -125,9 +134,9 @@ def change_phone_handler(*args):
     if rec:
         if any(str(phone) == old_phone for phone in rec.phones):
             rec.change_phone(old_phone, new_phone)
-            return f"/// Phone number changed from {old_phone} to {new_phone} for contact {name}"
+            return f"/// Phone number changed from {old_phone} to {new_phone} for contact: {name}"
         else:
-            return f"/// Phone number {old_phone} not found for contact {name}"
+            return f"/// Phone number {old_phone} not found for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
 
@@ -143,7 +152,7 @@ def change_birthdate_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         rec.birthday = new_birthday
-        return f"/// Birthdate changed to {new_birthday} for contact {name}"
+        return f"/// Birthdate changed to {new_birthday} for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
     
@@ -158,9 +167,24 @@ def change_email_handler(*args):
     rec: Record = address_book.get(name)
     if rec:
         rec.email = new_email
-        return f"/// Email changed to {new_email} for contact {name}"
+        return f"/// Email changed to {new_email} for contact: {name}"
     else:
         return f"/// No contacts with name: \"{name}\" in the address book"
+    
+@input_error
+def change_name_handler(*args):
+    if len(args) < 2:
+        return "/// Invalid command. Please provide name and new name."
+
+    old_name = args[0]
+    new_name = args[1]
+
+    rec: Record = address_book.get(old_name)
+    if rec:
+        rec.name.value = new_name
+        return f"/// Name changed \"{old_name}\" ---> \"{new_name}\"."
+    else:
+        return f"/// No contacts with name: \"{old_name}\" in the address book"
 
 @input_error
 def delete_handler(*args):
@@ -288,14 +312,16 @@ def get_current_time():
     return f"/// The current time is {current_time}"
 
 def sort_files(path):
+    sort_script_path = os.path.join(os.path.dirname(__file__), "sort.py")
     try:
-        subprocess.run(["python", "sort.py", path], check=True)
+        subprocess.run([sys.executable, sort_script_path, path], check=True)
         return True
     except subprocess.CalledProcessError as e:
         return False
 
 
 def exit_handler(*args):
+    notebook.save_to_file(save_path)
     return "/// Good bye!"
 
 
@@ -303,73 +329,22 @@ def exit_handler(*args):
 def unknown_handler(*args):
     return "/// Invalid command. Type \"help\" to show all commands."
 
+def add_note_handler(*data):
+     return notebook.add_note(*data)
 
-notes = []
+def show_all_notes_handler(*data):
+    return notebook.show_all_notes(*data)
 
-@input_error
-def add_note_handler(*args):
-    if len(args) < 2:
-        return "/// Invalid command. Please provide a title and text for the note."
 
-    title = args[0]
-    text = args[1]
+def view_note_handler(*data):
+    return notebook.view_note(*data)
 
-    tags = []
-    if len(args) > 2:
-        tags = args[2].split(',')
 
-    note = {"title": title, "text": text, "tags": tags}
-    notes.append(note)
-    return "/// Note added successfully."
+def edit_note_handler(*data):
+    return notebook.edit_note(*data)
 
-@input_error
-def show_notes_handler(*args):
-    if len(args) == 0:
-        if not notes:
-            return "/// No notes found."
-        output = ["/// All Notes:"]
-        for note in notes:
-            output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-        return "\n".join(output)
-
-    if args[0] == "all":
-        return show_notes_handler([])
-    else:
-        try:
-            page_number = int(args[0])
-            notes_per_page = 5
-            start_index = (page_number - 1) * notes_per_page
-            end_index = start_index + notes_per_page
-            notes_page = notes[start_index:end_index]
-            if not notes_page:
-                return f"/// Page {page_number} is empty. Available pages: 1 to {len(notes)//notes_per_page+1}"
-            output = [f"/// Notes (Page {page_number}):"]
-            for note in notes_page:
-                output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-            return "\n".join(output)
-        except ValueError:
-            return "/// Invalid page number. Please provide a positive integer page number or 'all'."
-
-@input_error
-def search_notes_handler(*args):
-    if len(args) == 0:
-        return "/// Invalid command. Please provide a search term."
-
-    search_term = args[0].lower()
-    matching_notes = []
-
-    for note in notes:
-        if (search_term in note["title"].lower()) or (search_term in note["text"].lower()) or any(search_term in tag.lower() for tag in note["tags"]):
-            matching_notes.append(note)
-
-    if not matching_notes:
-        return f"/// No notes found matching the search term: \"{search_term}\""
-
-    output = ["/// Matching Notes:"]
-    for note in matching_notes:
-        output.append(f"Title: {note['title']}, Text: {note['text']}, Tags: {', '.join(note['tags'])}")
-
-    return "\n".join(output)
+def delete_note_handler(*data):
+    return notebook.delete_note(*data)
 
 def find_closest_command(input_text):
     closest_command = ""
@@ -390,14 +365,17 @@ COMMANDS = {
     change_phone_handler: ("changephone", "cp"),
     change_birthdate_handler: ("changebirthdate", "cb"),
     change_email_handler: ("changeemail", "ce"),
+    change_name_handler: ("changename", "rename", "cn"),
     upcoming_birthdays_handler: ("upcomingbirthdays", "ub"),
     delete_handler: ("delete", "d"),
     search_handler: ("search", "find", "f"),
     exit_handler: ("bye", "exit", "break", "good bye", "close", "quit", "q"),
     show_all_handler: ("sc all", "showcontacts all", "sc", "showcontacts"),
     add_note_handler: ("addnote", "an"),
-    show_notes_handler: ("shownotes", "sn"),
-    search_notes_handler: ("searchnote", "findnote", "fn"),
+    show_all_notes_handler: ("shownotes", "sn"),
+    view_note_handler: ("searchnote", "findnote", "fn"),
+    edit_note_handler: ("editnote", "en"),
+    delete_note_handler: ("deletenote", "dn"),
     sort_files: ("sort", "s"),
     get_current_time: ("time", "t"),
     get_weather: ("weather", "w"),
@@ -421,8 +399,9 @@ def parser(text: str):
 
 
 def main():
+    notebook.load_from_file(save_path)
 
-    print(f"/// {bot_ver} loaded. Waiting for command.")
+    print(f"/// \U0001F916 {bot_ver} loaded. Waiting for command. \"help\" to show list of all commands.")
 
     while True:
         user_input = input("/// ---> ")

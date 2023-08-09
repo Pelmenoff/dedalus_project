@@ -211,7 +211,7 @@ class AddressBook(UserDict):
                 name = contact_data.get("name")
                 phones = contact_data.get("phones", [])
                 birthday_str = contact_data.get("birthday")
-                email_str = contact_data.get("email")  # Get the email from the loaded data
+                email_str = contact_data.get("email")
 
                 birthday = None
                 if birthday_str:
