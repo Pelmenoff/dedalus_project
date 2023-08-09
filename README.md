@@ -4,14 +4,14 @@ Dedalus is a personal assistant and organizer built using Python. It allows you 
 
 ## Getting Started
 
-###There is two ways how you can use Dedalus:
+### There is two ways how you can use Dedalus:
 
-####To install Dedalus on your device, follow these steps:
+##### To install Dedalus on your device, follow these steps:
 1. Download dedalus_project-1.2.3-py3-none-any.whl file to your device.
 2. Install it using `pip install dedalus_project-1.2.3-py3-none-any.whl`.
 3. Run cmd or powershell and activate Dedalus using `dedalusrun` command.
 
-####If you want to use Dedalus without installing, follow these steps:
+##### If you want to use Dedalus without installing, follow these steps:
 1. Clone or download the repository to your local machine.
 2. Install the required dependencies using `pip install -r requirements.txt`.
 3. Run `bot.py` in your preferred Python environment.
