@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name='personal assistant',
-    version='1.1',
+    version='1.2.1',
     description='Perosanl assistant that works with contacts and notes',
     url='https://github.com/Pelmenoff/dedalus_project',
     authors='Pelmenoff' 'Nikita-devel' 'Victor3637' 'candy-panda-v',

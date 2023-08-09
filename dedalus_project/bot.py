@@ -3,7 +3,7 @@ from classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
 from notebook import Notebook
 
-bot_ver = 'Dedalus v1.1.1'
+bot_ver = 'Dedalus v1.2.1'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
