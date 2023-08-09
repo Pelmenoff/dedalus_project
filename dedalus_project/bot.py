@@ -1,7 +1,7 @@
 import difflib, datetime, requests, subprocess, os, sys
-from classes import AddressBook, Name, Phone, Birthday, Email, Record
+from .classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
-from notebook import Notebook
+from .notebook import Notebook
 
 bot_ver = 'Dedalus v1.2.3'
 
