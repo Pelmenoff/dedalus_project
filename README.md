@@ -8,7 +8,7 @@ Dedalus is a personal assistant and organizer built using Python. It allows you 
 
 ##### To install Dedalus on your device, follow these steps:
 1. Download dedalus_project-1.2.3-py3-none-any.whl file to your device.
-2. Install it using `pip install dedalus_project-1.2.3-py3-none-any.whl`.
+2. Install it using `pip install dedalus_project-1.2.4-py3-none-any.whl`.
 3. Run cmd or powershell and activate Dedalus using `dedalusrun` command.
 
 ##### If you want to use Dedalus without installing, follow these steps:
