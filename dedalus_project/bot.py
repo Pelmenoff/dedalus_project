@@ -3,7 +3,7 @@ from .classes import AddressBook, Name, Phone, Birthday, Email, Record
 from datetime import datetime
 from .notebook import Notebook
 
-bot_ver = 'Dedalus v1.2.3'
+bot_ver = 'Dedalus v1.2.4'
 
 API_KEY = "653c3ccd328356a16a58c6dbd440c093"
 
@@ -26,13 +26,13 @@ def input_error(func):
 
 
 help_info = """/// Commands:
-/// "add [name] [phone] [birthday]" - Add a contact to the address book. Birthday is optional. Example: add John Doe +1234567890 10.08.1985
-/// "changephone [name] [old_phone] [new_phone]" - Change the phone number for a contact. Example: changephone John Doe +1234567890 +9876543210
-/// "changebirthdate [name] [new_date]" - Change the birthdate for a contact. Example: changebirthdate John Doe 10.08.1990
-/// "changeemail [name] [new_email]" - Change the email for a contact. Example: changeemail John Doe john@example.com
+/// "add [name] [phone] [birthday]" - Add a contact to the address book. Birthday is optional. Example: add John +1234567890 10.08.1985
+/// "changephone [name] [old_phone] [new_phone]" - Change the phone number for a contact. Example: changephone John +1234567890 +9876543210
+/// "changebirthdate [name] [new_date]" - Change the birthdate for a contact. Example: changebirthdate John 10.08.1990
+/// "changeemail [name] [new_email]" - Change the email for a contact. Example: changeemail John john@example.com
 /// "changename [name] [new_name]" or "rename [name] [new_name]" - Change the name of a contact. Example: changename John Bill
 /// "upcomingbirthdays [number of days]" - Show upcoming birthdays. Example: upcomingbirthdays 7
-/// "delete [name]" - Delete a contact from the address book. Example: delete John Doe
+/// "delete [name]" - Delete a contact from the address book. Example: delete John
 /// "search [query]" or "find [query]" - Search for contacts by name or phone number. Example: search John
 /// "showcontacts all" - Show all contacts. Example: showcontacts all
 /// "showcontacts [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: showcontacts 2
@@ -49,13 +49,13 @@ help_info = """/// Commands:
 /// "exit", "bye", "good bye", "close", "quit" - Turn off the assistant."""
 
 short_commands = """/// Commands:
-/// "add [name] [phone] [birthday]" - Add a contact. Example: add John Doe +1234567890 10.08.1985
-/// "cp [name] [old_phone] [new_phone]" - Change phone number. Example: cp John Doe +1234567890 +9876543210
-/// "cb [name] [new_date]" - Change birthdate. Example: cb John Doe 10.08.1990
-/// "ce [name] [new_email]" - Change email. Example: ce John Doe john@example.com
-/// "cn [name] [new_name]" - Change name. Example: cn John Doe John Smith
+/// "add [name] [phone] [birthday]" - Add a contact. Example: add John +1234567890 10.08.1985
+/// "cp [name] [old_phone] [new_phone]" - Change phone number. Example: cp John +1234567890 +9876543210
+/// "cb [name] [new_date]" - Change birthdate. Example: cb John 10.08.1990
+/// "ce [name] [new_email]" - Change email. Example: ce John john@example.com
+/// "cn [name] [new_name]" - Change name. Example: cn John Bill
 /// "ub [number of days]" - Show upcoming birthdays. Example: ub 7
-/// "d [name]" - Delete a contact. Example: d John Doe
+/// "d [name]" - Delete a contact. Example: d John
 /// "f [query]" - Search for contacts. Example: f John
 /// "sc all" - Show all contacts. Example: sc all
 /// "sc [page_number]" - Show contacts page by page. Enter 'all' to show all contacts at once. Example: sc 2
@@ -101,11 +101,19 @@ def add_handler(*args):
         except ValueError:
             email = Email(args[2])
     elif len(args) == 4:
-        birthday = Birthday(datetime.strptime(args[2], "%d.%m.%Y").date())
-        email = Email(args[3])
+        try:
+            birthday = Birthday(datetime.strptime(args[2], "%d.%m.%Y").date())
+            email = Email(args[3])
+        except ValueError:
+            birthday = Birthday(datetime.strptime(args[3], "%d.%m.%Y").date())
+            email = Email(args[2])
     elif len(args) == 5:
-        birthday = Birthday(datetime.strptime(args[3], "%d.%m.%Y").date())
-        email = Email(args[4])
+        try:
+            email = Email(args[4])
+            birthday = Birthday(datetime.strptime(args[3], "%d.%m.%Y").date())
+        except ValueError:
+            birthday = Birthday(datetime.strptime(args[4], "%d.%m.%Y").date())
+            email = Email(args[3])
 
     rec: Record = address_book.get(name)
     if rec:
