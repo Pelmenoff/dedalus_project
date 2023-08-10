@@ -89,7 +89,7 @@ To exit the Dedalus assistant, you can use any of the following commands:
 
 Here are a few usage examples to help you get started:
 
-- To add a contact: `add John Doe +1234567890 10.08.1985`
+- To add a contact: `add John +1234567890 10.08.1985`
 - To change a phone number: `changephone John +1234567890 +9876543210`
 - To search for contacts: `search John`
 - To add a note: `addnote Meeting Agenda Discuss project updates`
